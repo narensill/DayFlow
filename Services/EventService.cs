@@ -8,16 +8,21 @@ namespace DayFlow.Services;
 public class EventService : IEventService
 {
     private readonly DayFlowDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public EventService(DayFlowDbContext context)
+    public EventService(
+        DayFlowDbContext context,
+        ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<List<CalendarEvent>> GetAllAsync(
         CancellationToken cancellationToken = default)
     {
         return await _context.CalendarEvents
+            .Where(e => e.UserId == _currentUser.UserId)
             .OrderBy(e => e.StartDateTime)
             .ToListAsync(cancellationToken);
     }
@@ -27,7 +32,10 @@ public class EventService : IEventService
         CancellationToken cancellationToken = default)
     {
         return await _context.CalendarEvents
-            .FindAsync([id], cancellationToken);
+            .FirstOrDefaultAsync(
+                e => e.Id == id &&
+                     e.UserId == _currentUser.UserId,
+                cancellationToken);
     }
 
     public async Task<List<CalendarEvent>> GetByDateAsync(
@@ -41,7 +49,7 @@ public class EventService : IEventService
         var end = start.AddDays(1);
 
         return await _context.CalendarEvents
-            .Where(e =>
+            .Where(e => e.UserId == _currentUser.UserId &&
                 e.StartDateTime < end &&
                 e.EndDateTime >= start)
             .OrderBy(e => e.StartDateTime)
@@ -62,7 +70,7 @@ public class EventService : IEventService
         var end = now.AddDays(days);
 
         return await _context.CalendarEvents
-            .Where(e =>
+            .Where(e => e.UserId == _currentUser.UserId &&
                 e.EndDateTime >= now &&
                 e.StartDateTime <= end)
             .OrderBy(e => e.StartDateTime)
@@ -79,6 +87,7 @@ public class EventService : IEventService
 
         var calendarEvent = new CalendarEvent
         {
+            UserId = _currentUser.UserId,
             Title = request.Title.Trim(),
             Description = request.Description,
             StartDateTime = ToUtc(request.StartDateTime),
@@ -100,7 +109,10 @@ public class EventService : IEventService
         CancellationToken cancellationToken = default)
     {
         var calendarEvent = await _context.CalendarEvents
-            .FindAsync([id], cancellationToken);
+            .FirstOrDefaultAsync(
+                e => e.Id == id &&
+                     e.UserId == _currentUser.UserId,
+                cancellationToken);
 
         if (calendarEvent is null)
             return null;
@@ -123,7 +135,10 @@ public class EventService : IEventService
         CancellationToken cancellationToken = default)
     {
         var calendarEvent = await _context.CalendarEvents
-            .FindAsync([id], cancellationToken);
+            .FirstOrDefaultAsync(
+                e => e.Id == id &&
+                     e.UserId == _currentUser.UserId,
+                cancellationToken);
 
         if (calendarEvent is null)
             return false;

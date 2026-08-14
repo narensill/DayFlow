@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DayFlow.Models;
@@ -6,6 +7,11 @@ namespace DayFlow.Models;
 public class TaskItem
 {
     public int Id { get; set; }
+
+    public int UserId { get; set; }
+
+    [JsonIgnore]
+    public User User { get; set; } = null!;
 
     public string Title { get; set; } = string.Empty;
 

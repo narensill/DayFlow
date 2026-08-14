@@ -8,10 +8,14 @@ namespace DayFlow.Services;
 public class ReminderService : IReminderService
 {
     private readonly DayFlowDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public ReminderService(DayFlowDbContext context)
+    public ReminderService(
+        DayFlowDbContext context,
+        ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<List<Reminder>> GetAllAsync(
@@ -20,6 +24,7 @@ public class ReminderService : IReminderService
         return await _context.Reminders
             .Include(r => r.Task)
             .Include(r => r.Event)
+            .Where(r => r.UserId == _currentUser.UserId)
             .OrderBy(r => r.ReminderTime)
             .ToListAsync(cancellationToken);
     }
@@ -32,7 +37,7 @@ public class ReminderService : IReminderService
         return await _context.Reminders
             .Include(r => r.Task)
             .Include(r => r.Event)
-            .Where(r =>
+            .Where(r => r.UserId == _currentUser.UserId &&
                 !r.IsTriggered &&
                 r.ReminderTime <= now)
             .OrderBy(r => r.ReminderTime)
@@ -47,7 +52,8 @@ public class ReminderService : IReminderService
             .Include(r => r.Task)
             .Include(r => r.Event)
             .FirstOrDefaultAsync(
-                r => r.Id == id,
+                r => r.Id == id &&
+                     r.UserId == _currentUser.UserId,
                 cancellationToken);
     }
 
@@ -100,6 +106,7 @@ public class ReminderService : IReminderService
 
         var reminder = new Reminder
         {
+            UserId = _currentUser.UserId,
             TaskId = request.TaskId,
             EventId = request.EventId,
             ReminderTime = reminderTime,
@@ -122,7 +129,10 @@ public class ReminderService : IReminderService
         CancellationToken cancellationToken = default)
     {
         var reminder = await _context.Reminders
-            .FindAsync([id], cancellationToken);
+            .FirstOrDefaultAsync(
+                r => r.Id == id &&
+                     r.UserId == _currentUser.UserId,
+                cancellationToken);
 
         if (reminder is null)
             return null;
@@ -146,12 +156,35 @@ public class ReminderService : IReminderService
             cancellationToken);
     }
 
+    public async Task<Reminder?> TriggerAsync(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var reminder = await _context.Reminders
+            .FirstOrDefaultAsync(
+                r => r.Id == id &&
+                     r.UserId == _currentUser.UserId,
+                cancellationToken);
+
+        if (reminder is null)
+            return null;
+
+        reminder.IsTriggered = true;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return await GetByIdAsync(id, cancellationToken);
+    }
+
     public async Task<bool> DeleteAsync(
         int id,
         CancellationToken cancellationToken = default)
     {
         var reminder = await _context.Reminders
-            .FindAsync([id], cancellationToken);
+            .FirstOrDefaultAsync(
+                r => r.Id == id &&
+                     r.UserId == _currentUser.UserId,
+                cancellationToken);
 
         if (reminder is null)
             return false;
@@ -190,8 +223,9 @@ public class ReminderService : IReminderService
             if (request.TaskId.HasValue)
             {
                 var task = await _context.TaskItems
-                    .FindAsync(
-                        [request.TaskId.Value],
+                    .FirstOrDefaultAsync(
+                        t => t.Id == request.TaskId.Value &&
+                             t.UserId == _currentUser.UserId,
                         cancellationToken);
 
                 if (task?.DueDate is null)
@@ -205,8 +239,9 @@ public class ReminderService : IReminderService
             else
             {
                 var calendarEvent = await _context.CalendarEvents
-                    .FindAsync(
-                        [request.EventId!.Value],
+                    .FirstOrDefaultAsync(
+                        e => e.Id == request.EventId!.Value &&
+                             e.UserId == _currentUser.UserId,
                         cancellationToken);
 
                 if (calendarEvent is null)

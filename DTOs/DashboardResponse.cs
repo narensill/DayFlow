@@ -15,6 +15,10 @@ public class DashboardResponse
     public List<CalendarEvent> TodayEvents { get; set; } = [];
 
     public List<CalendarEvent> UpcomingEvents { get; set; } = [];
+
+    public List<Reminder> UpcomingReminders { get; set; } = [];
+
+    public WeatherResponse? Weather { get; set; }
 }
 
 public class TaskSummary

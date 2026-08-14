@@ -1,10 +1,12 @@
 using DayFlow.DTOs;
 using DayFlow.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DayFlow.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/dashboard")]
 public class DashboardController : ControllerBase
 {

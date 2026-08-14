@@ -1,10 +1,12 @@
 using DayFlow.DTOs;
 using DayFlow.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DayFlow.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/weather")]
 public class WeatherController : ControllerBase
 {

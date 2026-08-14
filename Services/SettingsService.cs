@@ -8,24 +8,32 @@ namespace DayFlow.Services;
 public class SettingsService : ISettingsService
 {
     private readonly DayFlowDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public SettingsService(DayFlowDbContext context)
+    public SettingsService(
+        DayFlowDbContext context,
+        ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<UserSettings> GetAsync(
         CancellationToken cancellationToken = default)
     {
+        var userId = _currentUser.UserId;
+
         var settings = await _context.UserSettings
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(
+                s => s.UserId == userId,
+                cancellationToken);
 
         if (settings is not null)
             return settings;
 
         settings = new UserSettings
         {
-            Id = 1,
+            UserId = userId,
             WeatherLocation = "Mumbai",
             TimeFormat = "12-hour",
             Theme = "system",
@@ -45,22 +53,26 @@ public class SettingsService : ISettingsService
     {
         Validate(request);
 
+        var userId = _currentUser.UserId;
+
         var settings = await _context.UserSettings
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(
+                s => s.UserId == userId,
+                cancellationToken);
 
         if (settings is null)
         {
             settings = new UserSettings
             {
-                Id = 1
+                UserId = userId
             };
 
             _context.UserSettings.Add(settings);
         }
 
         settings.WeatherLocation = request.WeatherLocation.Trim();
-        settings.TimeFormat = request.TimeFormat.Trim().ToLower();
-        settings.Theme = request.Theme.Trim().ToLower();
+        settings.TimeFormat = request.TimeFormat.Trim().ToLowerInvariant();
+        settings.Theme = request.Theme.Trim().ToLowerInvariant();
         settings.DefaultReminderMinutes = request.DefaultReminderMinutes;
         settings.UpdatedAt = DateTime.UtcNow;
 
@@ -74,10 +86,14 @@ public class SettingsService : ISettingsService
         if (string.IsNullOrWhiteSpace(request.WeatherLocation))
             throw new ArgumentException("Weather location is required.");
 
+        if (request.WeatherLocation.Trim().Length > 100)
+            throw new ArgumentException(
+                "Weather location cannot exceed 100 characters.");
+
         var validTimeFormats = new[] { "12-hour", "24-hour" };
 
         if (!validTimeFormats.Contains(
-                request.TimeFormat.Trim().ToLower()))
+                request.TimeFormat.Trim().ToLowerInvariant()))
         {
             throw new ArgumentException(
                 "Time format must be 12-hour or 24-hour.");
@@ -86,7 +102,7 @@ public class SettingsService : ISettingsService
         var validThemes = new[] { "light", "dark", "system" };
 
         if (!validThemes.Contains(
-                request.Theme.Trim().ToLower()))
+                request.Theme.Trim().ToLowerInvariant()))
         {
             throw new ArgumentException(
                 "Theme must be light, dark, or system.");
@@ -98,7 +114,7 @@ public class SettingsService : ISettingsService
                 request.DefaultReminderMinutes))
         {
             throw new ArgumentException(
-                "Default reminder must be 0, 5, 10, 30, 60, or 1440 minutes.");
+                "Default reminder must be 0, 5, 10, or 30, 60, or 1440 minutes.");
         }
     }
 }

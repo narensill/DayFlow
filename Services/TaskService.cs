@@ -8,10 +8,14 @@ namespace DayFlow.Services;
 public class TaskService : ITaskService
 {
     private readonly DayFlowDbContext _context;
+    private readonly ICurrentUserService _currentUser;
 
-    public TaskService(DayFlowDbContext context)
+    public TaskService(
+        DayFlowDbContext context,
+        ICurrentUserService currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<List<TaskItem>> GetAllAsync(
@@ -19,7 +23,8 @@ public class TaskService : ITaskService
         CancellationToken cancellationToken = default)
     {
         IQueryable<TaskItem> tasks = _context.TaskItems
-            .Include(task => task.Category);
+            .Include(task => task.Category)
+            .Where(task => task.UserId == _currentUser.UserId);
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -127,7 +132,8 @@ public class TaskService : ITaskService
         return await _context.TaskItems
             .Include(task => task.Category)
             .FirstOrDefaultAsync(
-                task => task.Id == id,
+                task => task.Id == id &&
+                        task.UserId == _currentUser.UserId,
                 cancellationToken);
     }
 
@@ -146,6 +152,7 @@ public class TaskService : ITaskService
 
         var task = new TaskItem
         {
+            UserId = _currentUser.UserId,
             Title = request.Title.Trim(),
             Description = request.Description,
             DueDate = request.DueDate,
@@ -179,7 +186,9 @@ public class TaskService : ITaskService
         CancellationToken cancellationToken = default)
     {
         var task = await _context.TaskItems
-            .FindAsync([id], cancellationToken);
+            .FirstOrDefaultAsync(
+                t => t.Id == id && t.UserId == _currentUser.UserId,
+                cancellationToken);
 
         if (task is null)
             return null;
@@ -224,7 +233,9 @@ public class TaskService : ITaskService
         CancellationToken cancellationToken = default)
     {
         var task = await _context.TaskItems
-            .FindAsync([id], cancellationToken);
+            .FirstOrDefaultAsync(
+                t => t.Id == id && t.UserId == _currentUser.UserId,
+                cancellationToken);
 
         if (task is null)
             return false;
@@ -241,7 +252,9 @@ public class TaskService : ITaskService
         CancellationToken cancellationToken = default)
     {
         var task = await _context.TaskItems
-            .FindAsync([id], cancellationToken);
+            .FirstOrDefaultAsync(
+                t => t.Id == id && t.UserId == _currentUser.UserId,
+                cancellationToken);
 
         if (task is null)
             return null;

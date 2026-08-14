@@ -1,11 +1,13 @@
 using DayFlow.DTOs;
 using DayFlow.Models;
 using DayFlow.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DayFlow.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/reminders")]
 public class RemindersController : ControllerBase
 {
@@ -111,6 +113,26 @@ public class RemindersController : ControllerBase
                 message = ex.Message
             });
         }
+    }
+
+    [HttpPatch("{id:int}/trigger")]
+    public async Task<ActionResult<Reminder>> TriggerReminder(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var reminder = await _reminderService.TriggerAsync(
+            id,
+            cancellationToken);
+
+        if (reminder is null)
+        {
+            return NotFound(new
+            {
+                message = "Reminder not found."
+            });
+        }
+
+        return Ok(reminder);
     }
 
     [HttpDelete("{id:int}")]

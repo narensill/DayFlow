@@ -6,6 +6,11 @@ public class Reminder
 {
     public int Id { get; set; }
 
+    public int UserId { get; set; }
+
+    [JsonIgnore]
+    public User User { get; set; } = null!;
+
     public int? TaskId { get; set; }
 
     [JsonIgnore]

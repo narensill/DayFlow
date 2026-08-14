@@ -24,6 +24,10 @@ public interface IReminderService
         UpdateReminderRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<Reminder?> TriggerAsync(
+        int id,
+        CancellationToken cancellationToken = default);
+
     Task<bool> DeleteAsync(
         int id,
         CancellationToken cancellationToken = default);

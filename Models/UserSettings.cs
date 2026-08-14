@@ -1,8 +1,15 @@
+using System.Text.Json.Serialization;
+
 namespace DayFlow.Models;
 
 public class UserSettings
 {
     public int Id { get; set; }
+
+    public int UserId { get; set; }
+
+    [JsonIgnore]
+    public User User { get; set; } = null!;
 
     public string WeatherLocation { get; set; } = "Mumbai";
 

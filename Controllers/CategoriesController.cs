@@ -1,11 +1,13 @@
 using DayFlow.DTOs;
 using DayFlow.Models;
 using DayFlow.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DayFlow.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/categories")]
 public class CategoriesController : ControllerBase
 {
