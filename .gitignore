@@ -1,0 +1,18 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Local development secrets
+appsettings.Development.json
+
+# Environment files
+.env
+.env.*
+
+# EF/local database artifacts
+*.db
+*.db-shm
+*.db-wal

@@ -1,0 +1,37 @@
+@baseUrl = http://localhost:5283
+
+### Get all tasks
+GET {{baseUrl}}/api/tasks
+
+### Get task by ID
+GET {{baseUrl}}/api/tasks/1
+
+### Create task
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Build DayFlow Tasks API",
+  "description": "Create the first CRUD module using ASP.NET Core",
+  "dueDate": "2026-08-15T20:00:00Z",
+  "priority": "High",
+  "category": "Project"
+}
+
+### Update task
+PUT {{baseUrl}}/api/tasks/1
+Content-Type: application/json
+
+{
+  "title": "Build DayFlow Tasks API - Updated",
+  "description": "Update the first CRUD module",
+  "dueDate": "2026-08-16T20:00:00Z",
+  "priority": "Medium",
+  "category": "Project"
+}
+
+### Complete task
+PATCH {{baseUrl}}/api/tasks/1/complete
+
+### Delete task
+DELETE {{baseUrl}}/api/tasks/1
