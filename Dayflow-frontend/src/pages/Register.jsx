@@ -53,7 +53,7 @@ export default function Register() {
             <div className="input-wrap">
               <span className="input-icon"><IconUser width="17" height="17" /></span>
               <input className="input" required value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Naren" />
+                onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="whats your name dude?" />
             </div>
           </div>
           <div className="field">
