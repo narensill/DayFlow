@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,7 +103,12 @@ builder.Services.AddCors(options =>
 // Controllers
 // --------------------------------------------------
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // --------------------------------------------------
