@@ -104,11 +104,12 @@ builder.Services.AddCors(options =>
 // --------------------------------------------------
 
 builder.Services.AddControllers()
-                .AddJsonOptions(options =>
+    .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter());
     });
+
 builder.Services.AddEndpointsApiExplorer();
 
 // --------------------------------------------------
