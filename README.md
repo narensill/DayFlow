@@ -1,53 +1,34 @@
-# DayFlow
+# DayFlow — Full Project
 
-DayFlow is a personal productivity and daily-planning application built with C#/.NET and PostgreSQL.
+This archive contains the complete DayFlow project:
 
-## Current backend foundation
-
-- .NET 10 / ASP.NET Core Web API
-- Entity Framework Core 10
-- PostgreSQL
-- Npgsql
-- Dependency Injection
-- Service layer
-- Task CRUD API
-- Swagger
-- REST Client request examples
-
-## Current structure
-
-```text
-DayFlow/
-├── Controllers/
-├── Data/
-├── DTOs/
-├── Models/
-├── Services/
-├── Requests/
-├── Migrations/
-├── Program.cs
-├── appsettings.json
-└── DayFlow.csproj
+```
+DayFlow-Project/
+├── DayFlow-main/         ASP.NET Core / PostgreSQL backend (as provided, unchanged)
+└── dayflow-frontend/     React + Vite frontend (new — this is what was built)
 ```
 
-## Local database configuration
+## Running it
 
-1. Create a PostgreSQL database named `dayflow`.
-2. Copy the connection string into `appsettings.Development.json`.
-3. Replace `CHANGE_ME` with your local PostgreSQL password.
-4. Run:
-
-```bash
+### Backend
+```
+cd DayFlow-main
 dotnet restore
-dotnet build
 dotnet ef database update
 dotnet run
 ```
+Make sure `appsettings.Development.json` / environment variables have a valid
+`ConnectionStrings:DefaultConnection`, `Jwt:Secret`, and `Cors:AllowedOrigins`
+that includes `http://localhost:5173` (the frontend's dev port).
 
-Do not commit `appsettings.Development.json`.
+### Frontend
+```
+cd dayflow-frontend
+npm install
+cp .env.example .env    # point VITE_API_BASE_URL at your running API, e.g. http://localhost:5000/api
+npm run dev
+```
 
-## Production plan
-
-The project is intended to use a hosted PostgreSQL database such as Supabase for production. The connection string will be supplied through deployment environment variables rather than committed to source control.
-
-The frontend can later be hosted on Vercel while the ASP.NET Core API is deployed to a .NET-compatible backend host.
+Then open the printed local URL (default `http://localhost:5173`), register an
+account, and you're in. See `dayflow-frontend/README.md` for a full breakdown of
+what was built (routing, pages, design system, features).
