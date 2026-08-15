@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import Modal from './Modal';
+import Select from './Select';
+import { useSettings } from '../context/SettingsContext';
 
 const PRESETS = [
-  { label: 'At time', minutes: 0 },
-  { label: '5 minutes before', minutes: 5 },
-  { label: '10 minutes before', minutes: 10 },
-  { label: '30 minutes before', minutes: 30 },
-  { label: '1 hour before', minutes: 60 },
-  { label: '1 day before', minutes: 1440 },
+  { label: 'At time', value: 0 },
+  { label: '5 minutes before', value: 5 },
+  { label: '10 minutes before', value: 10 },
+  { label: '30 minutes before', value: 30 },
+  { label: '1 hour before', value: 60 },
+  { label: '1 day before', value: 1440 },
 ];
 
 export default function ReminderModal({ tasks, events, onClose, onSubmit }) {
+  const { settings } = useSettings();
   const [linkType, setLinkType] = useState('task');
   const [linkId, setLinkId] = useState('');
-  const [minutesBefore, setMinutesBefore] = useState(30);
+  const [minutesBefore, setMinutesBefore] = useState(settings?.defaultReminderMinutes ?? 30);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -38,6 +41,7 @@ export default function ReminderModal({ tasks, events, onClose, onSubmit }) {
   };
 
   const options = linkType === 'task' ? tasks : events;
+  const linkOpts = options.map((o) => ({ label: o.title, value: o.id }));
 
   return (
     <Modal title="Add Reminder" onClose={onClose}>
@@ -52,10 +56,12 @@ export default function ReminderModal({ tasks, events, onClose, onSubmit }) {
         </div>
         <div className="field">
           <label>{linkType === 'task' ? 'Task' : 'Event'}</label>
-          <select className="select" value={linkId} onChange={(e) => setLinkId(e.target.value)}>
-            <option value="">Select {linkType}…</option>
-            {options.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}
-          </select>
+          <Select
+            value={linkId}
+            onChange={setLinkId}
+            options={linkOpts}
+            placeholder={`Select ${linkType}…`}
+          />
           {options.length === 0 && (
             <div className="text-dim" style={{ fontSize: '0.78rem', marginTop: 6 }}>
               No {linkType}s with a due date/time available yet.
@@ -64,9 +70,7 @@ export default function ReminderModal({ tasks, events, onClose, onSubmit }) {
         </div>
         <div className="field">
           <label>Reminder timing</label>
-          <select className="select" value={minutesBefore} onChange={(e) => setMinutesBefore(e.target.value)}>
-            {PRESETS.map((p) => <option key={p.minutes} value={p.minutes}>{p.label}</option>)}
-          </select>
+          <Select value={minutesBefore} onChange={(v) => setMinutesBefore(Number(v))} options={PRESETS} />
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>

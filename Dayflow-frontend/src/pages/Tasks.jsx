@@ -7,6 +7,7 @@ import { LoadingState, ErrorState, EmptyState } from '../components/States';
 import TaskCard from '../components/TaskCard';
 import TaskModal from '../components/TaskModal';
 import { ConfirmDialog } from '../components/Modal';
+import Select from '../components/Select';
 import { IconPlus, IconSearch } from '../components/Icons';
 
 const TABS = [
@@ -109,16 +110,25 @@ export default function Tasks() {
           <input className="input" placeholder="Search tasks…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex-row">
-          <select className="select" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} style={{ width: 160 }}>
-            <option value="">All categories</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select className="select" value={sort} onChange={(e) => setSort(e.target.value)} style={{ width: 160 }}>
-            <option value="dueDate">Sort: Due date</option>
-            <option value="priority">Sort: Priority</option>
-            <option value="title">Sort: Title</option>
-            <option value="createdAt">Sort: Created</option>
-          </select>
+          <Select
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            options={[{ label: 'All categories', value: '' }, ...categories.map((c) => ({ label: c.name, value: c.id }))]}
+            size="sm"
+            style={{ width: 170 }}
+          />
+          <Select
+            value={sort}
+            onChange={setSort}
+            size="sm"
+            style={{ width: 170 }}
+            options={[
+              { label: 'Sort: Due date', value: 'dueDate' },
+              { label: 'Sort: Priority', value: 'priority' },
+              { label: 'Sort: Title', value: 'title' },
+              { label: 'Sort: Created', value: 'createdAt' },
+            ]}
+          />
         </div>
       </div>
 

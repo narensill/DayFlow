@@ -1,19 +1,30 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal';
+import Select from './Select';
+import { useSettings } from '../context/SettingsContext';
 import { formatDateTimeInput } from '../utils/date';
 
 const PRIORITIES = ['Low', 'Medium', 'High'];
-const STATUSES = ['Pending', 'InProgress', 'Completed', 'Cancelled'];
+const STATUS_OPTS = [
+  { label: 'Pending', value: 'Pending' },
+  { label: 'In Progress', value: 'InProgress' },
+  { label: 'Completed', value: 'Completed' },
+  { label: 'Cancelled', value: 'Cancelled' },
+];
 
 export default function TaskModal({ task, categories, onClose, onSubmit }) {
-  const [form, setForm] = useState({
+  const { settings } = useSettings();
+
+  const buildDefaultForm = () => ({
     title: '',
     description: '',
     dueDate: '',
-    priority: 'Medium',
-    status: 'Pending',
+    priority: settings?.defaultTaskPriority || 'Medium',
+    status: settings?.defaultTaskStatus || 'Pending',
     categoryId: categories?.[0]?.id || '',
   });
+
+  const [form, setForm] = useState(buildDefaultForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,6 +38,8 @@ export default function TaskModal({ task, categories, onClose, onSubmit }) {
         status: task.status || 'Pending',
         categoryId: task.categoryId || categories?.[0]?.id || '',
       });
+    } else {
+      setForm(buildDefaultForm());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task]);
@@ -59,6 +72,8 @@ export default function TaskModal({ task, categories, onClose, onSubmit }) {
     }
   };
 
+  const categoryOpts = (categories || []).map((c) => ({ label: c.name, value: c.id }));
+
   return (
     <Modal title={task ? 'Edit Task' : 'Add Task'} onClose={onClose}>
       {error && <div className="auth-error">{error}</div>}
@@ -81,22 +96,25 @@ export default function TaskModal({ task, categories, onClose, onSubmit }) {
         <div className="modal-row-2">
           <div className="field">
             <label>Priority</label>
-            <select className="select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
-              {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
+            <Select
+              value={form.priority}
+              onChange={(v) => setForm({ ...form, priority: v })}
+              options={PRIORITIES.map((p) => ({ label: p, value: p }))}
+            />
           </div>
           <div className="field">
             <label>Status</label>
-            <select className="select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select value={form.status} onChange={(v) => setForm({ ...form, status: v })} options={STATUS_OPTS} />
           </div>
         </div>
         <div className="field">
           <label>Category</label>
-          <select className="select" value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
-            {(categories || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <Select
+            value={form.categoryId}
+            onChange={(v) => setForm({ ...form, categoryId: v })}
+            options={categoryOpts}
+            placeholder="Select a category…"
+          />
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>

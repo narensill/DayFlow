@@ -1,3 +1,7 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using DayFlow.Data;
 using DayFlow.DTOs;
 using DayFlow.Models;
@@ -38,6 +42,12 @@ public class SettingsService : ISettingsService
             TimeFormat = "12-hour",
             Theme = "system",
             DefaultReminderMinutes = 10,
+            AnimationsEnabled = true,
+            CompactMode = false,
+            WeekStartsOn = "sunday",
+            DefaultTaskPriority = "Medium",
+            DefaultTaskStatus = "Pending",
+            BrowserNotificationsEnabled = true,
             UpdatedAt = DateTime.UtcNow
         };
 
@@ -74,11 +84,27 @@ public class SettingsService : ISettingsService
         settings.TimeFormat = request.TimeFormat.Trim().ToLowerInvariant();
         settings.Theme = request.Theme.Trim().ToLowerInvariant();
         settings.DefaultReminderMinutes = request.DefaultReminderMinutes;
+        settings.AnimationsEnabled = request.AnimationsEnabled;
+        settings.CompactMode = request.CompactMode;
+        settings.WeekStartsOn = request.WeekStartsOn.Trim().ToLowerInvariant();
+        settings.DefaultTaskPriority = NormalizeEnumValue(request.DefaultTaskPriority, ValidPriorities);
+        settings.DefaultTaskStatus = NormalizeEnumValue(request.DefaultTaskStatus, ValidStatuses);
+        settings.BrowserNotificationsEnabled = request.BrowserNotificationsEnabled;
         settings.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
 
         return settings;
+    }
+
+    private static readonly string[] ValidPriorities = { "Low", "Medium", "High" };
+    private static readonly string[] ValidStatuses = { "Pending", "InProgress", "Completed", "Cancelled" };
+
+    private static string NormalizeEnumValue(string value, string[] validValues)
+    {
+        var trimmed = (value ?? string.Empty).Trim();
+        var match = validValues.FirstOrDefault(v => string.Equals(v, trimmed, StringComparison.OrdinalIgnoreCase));
+        return match ?? trimmed;
     }
 
     private static void Validate(UpdateSettingsRequest request)
@@ -115,6 +141,29 @@ public class SettingsService : ISettingsService
         {
             throw new ArgumentException(
                 "Default reminder must be 0, 5, 10, or 30, 60, or 1440 minutes.");
+        }
+
+        var validWeekStarts = new[] { "sunday", "monday" };
+
+        if (!validWeekStarts.Contains(
+                (request.WeekStartsOn ?? string.Empty).Trim().ToLowerInvariant()))
+        {
+            throw new ArgumentException(
+                "Week start must be sunday or monday.");
+        }
+
+        var priorityInput = (request.DefaultTaskPriority ?? string.Empty).Trim();
+        if (!ValidPriorities.Any(v => string.Equals(v, priorityInput, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                "Default task priority must be Low, Medium, or High.");
+        }
+
+        var statusInput = (request.DefaultTaskStatus ?? string.Empty).Trim();
+        if (!ValidStatuses.Any(v => string.Equals(v, statusInput, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException(
+                "Default task status must be Pending, InProgress, Completed, or Cancelled.");
         }
     }
 }
